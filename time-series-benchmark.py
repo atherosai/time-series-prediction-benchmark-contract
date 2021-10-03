@@ -8,7 +8,7 @@ from gru_method import forecast_with_gru
 
 # from temporal_fusion_method import forecast_with_temporal_fusion
 # from prophet_method import forecast_with_prophet
-# from temporal_fusion_method import forecast_with_temporal_fusion
+from temporal_fusion_method import forecast_with_temporal_fusion
 
 os.chdir(sys.path[0])
 
@@ -23,8 +23,6 @@ if __name__ == "__main__":
         end_date=config['training_period_end_date']
     )
 
-    print('training', training_data)
-
     testing_data = load_prediction_dataset(
         ticker=config['ticker'],
         start_date=config['testing_period_start_date'],
@@ -37,25 +35,16 @@ if __name__ == "__main__":
     #     training_data=training_data,
     #     testing_data=testing_data
     # )
+
     # forecast_with_gru(
     #     training_dataset=training_data,
     #     testing_dataset=testing_data,
     #     all_data=all_data
     # )
 
-    forecast_with_gru(
+    forecast_with_temporal_fusion(
         training_dataset=training_data,
         testing_dataset=testing_data,
         all_data=all_data
     )
-  
-
-    # forecast_with_lstm(training_dataset=training_data, testing_dataset=testing_data)
-
-    # forecast_with_prophet(training_data[['date', 'open']], testing_data[['date','open']])
-    # forecast_with_temporal_fusion(training_data=training_data, testing_data=testing_data)
-    # forecast_with_temporal_fusion(
-    #     training_data[['date', 'open']],
-    #     testing_data[['date', 'open']]
-    # )
 

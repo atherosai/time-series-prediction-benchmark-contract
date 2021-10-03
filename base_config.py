@@ -31,6 +31,8 @@ config = {
             "num_epochs": 100,
             'lr': 0.01
         },
-        'temporal_fusion': {}
+        'temporal_fusion': {
+            
+        }
     }
 }
