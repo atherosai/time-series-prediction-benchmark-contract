@@ -7,7 +7,7 @@ import sys
 from gru_method import forecast_with_gru
 
 # from temporal_fusion_method import forecast_with_temporal_fusion
-# from prophet_method import forecast_with_prophet
+from prophet_method import forecast_with_prophet
 from temporal_fusion_method import forecast_with_temporal_fusion
 
 os.chdir(sys.path[0])
