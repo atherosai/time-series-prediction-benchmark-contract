@@ -32,7 +32,16 @@ config = {
             'lr': 0.01
         },
         'temporal_fusion': {
-            
+            'n_trials': 200,
+            'max_epochs': 20,
+            'gradient_clip_val': 0.1,
+            'hidden_size': 128,
+            'hidden_continuous_size': 8,
+            'attention_head_size': 1,
+            'learning_rate': 0.15135612484362077,
+            'dropout': 0.1,
+            # 'trainer_kwargs': dict(limit_train_batches=30),
+            'reduce_on_plateau_patience': 4,
         }
     }
 }

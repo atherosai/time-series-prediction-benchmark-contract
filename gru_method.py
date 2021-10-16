@@ -8,7 +8,7 @@ from base_config import config
 import matplotlib.pyplot as plt
 import seaborn as sns
 import math, time
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error, mean_absolute_error
 import plotly.express as px
 import plotly.graph_objects as go
 
@@ -144,11 +144,11 @@ def forecast_with_gru(training_dataset, testing_dataset, all_data):
     y_test_pred = scaler.inverse_transform(y_test_pred.detach().numpy())
     y_test = scaler.inverse_transform(y_test.detach().numpy())
 
-    # calculate root mean squared error
-    trainScore = math.sqrt(mean_squared_error(y_train[:,0], y_train_pred[:,0]))
-    print('Train Score: %.2f RMSE' % (trainScore))
-    testScore = math.sqrt(mean_squared_error(y_test[:,0], y_test_pred[:,0]))
-    print('Test Score: %.2f RMSE' % (testScore))
+    # print errors
+    print('MAE: ', mean_absolute_error(y_test[:,0], y_test_pred[:,0]))
+    print('MAPE: ', mean_absolute_percentage_error(y_test[:,0], y_test_pred[:,0]))
+    print('RMSE: ', math.sqrt(mean_squared_error(y_test[:,0], y_test_pred[:,0])))
+
     lstm.append(trainScore)
     lstm.append(testScore)
     lstm.append(training_time)

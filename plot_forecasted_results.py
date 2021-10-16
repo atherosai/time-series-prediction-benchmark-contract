@@ -9,6 +9,8 @@ def plot_forecasted_results(
         with_confidence_intervals=False
     ):
 
+    print(forecast)
+
     plt.title(f" {config['ticker']} - horní a dolní interval spolehlivosti predikce")
 
     plot_args = (

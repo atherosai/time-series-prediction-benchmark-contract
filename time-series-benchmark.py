@@ -9,13 +9,16 @@ from gru_method import forecast_with_gru
 # from temporal_fusion_method import forecast_with_temporal_fusion
 from prophet_method import forecast_with_prophet
 from temporal_fusion_method import forecast_with_temporal_fusion
+# from temporal_fusion_method_example import forecast_with_temporal_fusion
 
 os.chdir(sys.path[0])
 
 from base_config import config
 from utils import load_prediction_dataset
+# import torch
 
 if __name__ == "__main__":
+    # print('cuda available: ', torch.cuda.is_available())
 
     training_data = load_prediction_dataset(
         ticker=config['ticker'],
@@ -36,15 +39,15 @@ if __name__ == "__main__":
     #     testing_data=testing_data
     # )
 
-    # forecast_with_gru(
-    #     training_dataset=training_data,
-    #     testing_dataset=testing_data,
-    #     all_data=all_data
-    # )
-
     forecast_with_temporal_fusion(
         training_dataset=training_data,
         testing_dataset=testing_data,
         all_data=all_data
     )
+
+    # forecast_with_gru(
+    #     training_dataset=training_data,
+    #     testing_dataset=testing_data,
+    #     all_data=all_data
+    # )
 

@@ -1,20 +1,15 @@
 attention_head_size: 1
 categorical_groups: {}
 dropout: 0.1
-embedding_labels:
-  group:
-    group: 0
+embedding_labels: {}
 embedding_paddings: []
-embedding_sizes:
-  group: !!python/tuple
-  - 1
-  - 1
+embedding_sizes: {}
 hidden_continuous_size: 8
 hidden_continuous_sizes: {}
-hidden_size: 16
-learning_rate: 0.03
+hidden_size: 64
+learning_rate: 0.07943282347242808
 log_gradient_flow: false
-log_interval: 10
+log_interval: -1
 log_val_interval: null
 lstm_layers: 1
 max_encoder_length: 24
@@ -40,19 +35,18 @@ output_transformer: !!python/object:pytorch_forecasting.data.encoders.EncoderNor
     - -1
     - 0
   - !!binary |
-    lMyV61KtOUA=
+    3PsHUHi9OUA=
   eps: 1.0e-08
   method: standard
   scale_: !!python/object/apply:numpy.core.multiarray.scalar
   - *id001
   - !!binary |
-    fGfSSR2rMkA=
+    EbvRLtOpMkA=
   transformation: relu
 reduce_on_plateau_min_lr: 1.0e-05
 reduce_on_plateau_patience: 4
 share_single_variable_networks: false
-static_categoricals:
-- group
+static_categoricals: []
 static_reals:
 - encoder_length
 - open_center
@@ -64,8 +58,7 @@ time_varying_reals_decoder:
 time_varying_reals_encoder:
 - relative_time_idx
 weight_decay: 0.0
-x_categoricals:
-- group
+x_categoricals: []
 x_reals:
 - encoder_length
 - open_center
