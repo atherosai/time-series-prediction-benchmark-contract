@@ -21,6 +21,7 @@ torch = "*"
 pytorch-forecasting = "*"
 pytorch-lightning = "*"
 conda = "*"
+d2l = "*"
 
 [requires]
 python_version = "3.8"

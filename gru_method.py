@@ -11,6 +11,7 @@ import math, time
 from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error, mean_absolute_error
 import plotly.express as px
 import plotly.graph_objects as go
+from utils import print_metrics
 
 gru_config = config['methods_hyper_config']['gru']
 
@@ -136,8 +137,6 @@ def forecast_with_gru(training_dataset, testing_dataset, all_data):
     # make predictions
     y_test_pred = model(x_test)
 
-    lstm = []
-
     # invert predictions
     y_train_pred = scaler.inverse_transform(y_train_pred.detach().numpy())
     y_train = scaler.inverse_transform(y_train.detach().numpy())
@@ -145,13 +144,7 @@ def forecast_with_gru(training_dataset, testing_dataset, all_data):
     y_test = scaler.inverse_transform(y_test.detach().numpy())
 
     # print errors
-    print('MAE: ', mean_absolute_error(y_test[:,0], y_test_pred[:,0]))
-    print('MAPE: ', mean_absolute_percentage_error(y_test[:,0], y_test_pred[:,0]))
-    print('RMSE: ', math.sqrt(mean_squared_error(y_test[:,0], y_test_pred[:,0])))
-
-    lstm.append(trainScore)
-    lstm.append(testScore)
-    lstm.append(training_time)
+    print_metrics(y_test[:,0], y_test_pred[:,0])
 
     # shift train predictions for plotting
     trainPredictPlot = np.empty_like(price)

@@ -1,7 +1,8 @@
 import re
 import yfinance as yf
 from pandas_datareader import data as pdr
-from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error, mean_absolute_error
+import math, time
 
 yf.pdr_override()
 
@@ -22,7 +23,6 @@ def pd_to_underscore(pd_to_rename, columns=[]):
 
     return pd_renamed
 
-
 def load_prediction_dataset(
         ticker,
         start_date,
@@ -39,9 +39,19 @@ def load_prediction_dataset(
 
     return pd_to_underscore(fetched_data)
 
-def compare_metrics(y_true, y_pred):
+def print_metrics(y_true, y_pred):
+
+    y_true_trimmed = y_true[:250]
+    y_pred_trimmed = y_pred[:250]
+
+    print(y_true_trimmed)
+    print(y_pred_trimmed)
     
-    print('y true', y_true, y_pred)
+    print('MAE: ', mean_absolute_error(y_true_trimmed, y_pred_trimmed))
+    print('MAPE: ', mean_absolute_percentage_error(y_true_trimmed, y_pred_trimmed))
+    print('RMSE: ', math.sqrt(mean_squared_error(y_true_trimmed, y_pred_trimmed)))
+
+def compare_metrics(y_true, y_pred):
     mean_absolute_error_result = mean_absolute_error(y_true, y_pred)
     mean_squared_error_result = mean_squared_error(y_true, y_pred)
 

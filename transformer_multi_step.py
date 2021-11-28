@@ -1,5 +1,3 @@
-
-  
 from datetime import date
 import torch
 import torch.nn as nn
@@ -10,6 +8,10 @@ import math
 from matplotlib import pyplot
 from sklearn.preprocessing import MinMaxScaler
 from base_config import config
+from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error, mean_absolute_error
+from utils import print_metrics
+
+transformer_config = config['methods_hyper_config']['transformer']
 
 torch.manual_seed(0)
 np.random.seed(0)
@@ -17,7 +19,7 @@ np.random.seed(0)
 # This concept is also called teacher forceing. 
 # The flag decides if the loss will be calculted over all 
 # or just the predicted values.
-calculate_loss_over_all_values = True
+calculate_loss_over_all_values = transformer_config['calculate_loss_over_all_values']
 
 # S is the source sequence length
 # T is the target sequence length
@@ -30,11 +32,11 @@ calculate_loss_over_all_values = True
 #
 #print(out)
 
-input_window = 150
-output_window = 10
-lr_definition = 0.01
-number_of_epochs = 60
-batch_size = 10 # batch size
+input_window = transformer_config['input_window']
+output_window = transformer_config['output_window']
+lr_definition = transformer_config['learning_rate']
+number_of_epochs = transformer_config['number_of_epochs']
+batch_size = transformer_config['batch_size'] # batch size
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 scaler = MinMaxScaler(feature_range=(-1, 1)) 
@@ -46,6 +48,7 @@ lr = lr_definition
 best_val_loss = float("inf")
 epochs = number_of_epochs # The number of epochs
 best_model = None
+
 
 class PositionalEncoding(nn.Module):
 
@@ -65,13 +68,13 @@ class PositionalEncoding(nn.Module):
        
 
 class TransAm(nn.Module):
-    def __init__(self,feature_size=250,num_layers=1,dropout=0.1):
+    def __init__(self,feature_size=transformer_config['feature_size'], num_layers=transformer_config['num_layers'], dropout=transformer_config['dropout']):
         super(TransAm, self).__init__()
         self.model_type = 'Transformer'
         
         self.src_mask = None
         self.pos_encoder = PositionalEncoding(feature_size)
-        self.encoder_layer = nn.TransformerEncoderLayer(d_model=feature_size, nhead=10, dropout=dropout)
+        self.encoder_layer = nn.TransformerEncoderLayer(d_model=feature_size, nhead=transformer_config['nhead'], dropout=dropout)
         self.transformer_encoder = nn.TransformerEncoder(self.encoder_layer, num_layers=num_layers)        
         self.decoder = nn.Linear(feature_size,1)
         self.init_weights()
@@ -224,11 +227,15 @@ def plot_and_loss(eval_model, data_source, epoch, series):
     # pyplot.plot(test_result-truth,color="green")
     # pyplot.grid(True, which='both')
     pyplot.axhline(y=0, color='k')
-    pyplot.savefig('graph/transformer-epoch%d.png'%epoch)
+    # pyplot.show()
+    pyplot.savefig('graphs/transformer/transformer-epoch%d.png'%epoch)
     pyplot.close()
     
     return total_loss / i
 
+def mean_absolute_percentage_error_custom(y_true, y_pred): 
+    y_true, y_pred = np.array(y_true), np.array(y_pred)
+    return np.mean(np.abs((y_true - y_pred) / y_true)) * 100
 
 def predict_future(eval_model, data_source, original_series, epoch):
     eval_model.eval() 
@@ -253,24 +260,32 @@ def predict_future(eval_model, data_source, original_series, epoch):
     data_plot = scaler.inverse_transform(data.numpy().reshape(1, -1)).reshape(-1)
     # full_data = full_data.cpu().view
     # full_data = scaler.inverse_transform(full_data.numpy().reshape(1, -1)).reshape(-1)
+    
+    original_values = test_series['open'].to_numpy()
 
-    print('data', data_plot)
+    print_metrics(original_values, data_plot)
+    print('Steps: ', steps)
+    print('Epoch: ', epoch)
 
+    # if epoch > transformer_config['number_of_epochs'] * 0.7:
     pyplot.plot(data_plot,color="red")
     pyplot.plot(test_series['open'], color="blue")
 
     # pyplot.grid(True, which='both')
-    pyplot.legend(['Price prediction', 'Actual price'])
+    pyplot.legend(['Predikce ceny', 'Realná cena'])
     # pyplot.axhline(y=0, color='k')
-    pyplot.xlabel('Predited vs actual 2019')
-    pyplot.ylabel(f"{config['ticker']} price")
-    pyplot.savefig(f"graph/transformer_predicted_{config['ticker']}_{str(steps)}_{str(epoch)}.png")
+    pyplot.xlabel('Predikce vs realná data na části testovacího souboru')
+    pyplot.ylabel(f"{config['ticker']} cena akcie")
+
+    # pyplot.show()
+    pyplot.savefig(f"graphs/transformer/transformer_predicted_{config['ticker']}_{str(steps)}_{str(epoch)}.png")
+
     pyplot.close()
   
 def evaluate(eval_model, data_source):
     eval_model.eval() # Turn on the evaluation mode
     total_loss = 0.
-    eval_batch_size = 1000
+    eval_batch_size = transformer_config['eval_batch_size']
     with torch.no_grad():
         for i in range(0, len(data_source) - 1, eval_batch_size):
             data, targets = get_batch(data_source, i,eval_batch_size)
@@ -285,6 +300,9 @@ def evaluate(eval_model, data_source):
 def predict_with_transformer(series_train, series_test):
 
     train_data, val_data = prepare_data(series_train, series_test)
+
+    print('train_data: ', train_data)
+    print('series_test: ', series_test)
 
     for epoch in range(1, epochs + 1):
         epoch_start_time = time.time()
@@ -303,8 +321,7 @@ def predict_with_transformer(series_train, series_test):
             val_loss = evaluate(model, val_data)
             
         print('-' * 89)
-        print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.5f} | valid ppl {:8.2f}'.format(epoch, (time.time() - epoch_start_time),
-                                        val_loss, math.exp(val_loss)))
+        print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.5f} | valid ppl {:8.2f}'.format(epoch, (time.time() - epoch_start_time),val_loss, math.exp(val_loss)))
         print('-' * 89)
 
         # if val_loss < best_val_loss:
