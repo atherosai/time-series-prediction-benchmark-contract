@@ -3,7 +3,8 @@ import os
 import sys
 from lstm_method import forecast_with_lstm
 from gru_method import forecast_with_gru
-from transformer_multi_step import predict_with_transformer
+from transformer_multi_step import predict_with_transformer_multi
+from transformer_single_step import predict_with_transformer_single
 
 from prophet_method import forecast_with_prophet
 # from temporal_fusion_method import forecast_with_temporal_fusion
@@ -44,7 +45,12 @@ if __name__ == "__main__":
 
     # forecast_with_lstm(training_dataset=training_data, testing_dataset=testing_data, all_data=all_data)
 
-    predict_with_transformer(
+    # predict_with_transformer_multi(
+    #     training_data,
+    #     testing_data
+    # )
+
+    predict_with_transformer_single(
         training_data,
         testing_data
     )

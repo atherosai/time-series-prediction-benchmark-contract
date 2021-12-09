@@ -23,18 +23,18 @@ def forecast_with_prophet(training_data, testing_data):
         'open': 'y'
     })
 
-    m = Prophet(
+    model = Prophet(
         changepoint_prior_scale=prophet_config['changepoint_prior_scale'],
         changepoint_range=prophet_config['changepoint_range']
     )
-    m.fit(for_prophet_training)
+    model.fit(for_prophet_training)
 
     period_length = datetime.datetime.strptime(config['testing_period_end_date'], '%Y-%m-%d') - datetime.datetime.strptime(
         config['testing_period_start_date'], '%Y-%m-%d')
     print('period length', period_length.days)
-    future = m.make_future_dataframe(periods=period_length.days)
+    future = model.make_future_dataframe(periods=period_length.days, freq="d")
 
-    forecast = m.predict(future)
+    forecast = model.predict(future)
 
     print('testing data', testing_data['open'].to_numpy())
     print('forecast: ', forecast['yhat'].to_numpy())
@@ -43,7 +43,7 @@ def forecast_with_prophet(training_data, testing_data):
     # print(forecast['yhat'])
 
     training_data_reshape = testing_data['open'].to_numpy()
-    forecast_data_reshape = forecast['yhat'][-252:].to_numpy()
+    forecast_data_reshape = forecast['yhat'].to_numpy()
 
     print('training size: ', training_data_reshape.size)
     print('forecast size: ', forecast_data_reshape.size)

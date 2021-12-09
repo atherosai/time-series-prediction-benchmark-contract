@@ -1,6 +1,6 @@
 # SPY OXY TSLA AMZN
 config = {
-    'ticker': 'AMZN',
+    'ticker': 'TSLA',
     'training_period_start_date': '2010-01-01',
     'training_period_end_date': '2016-12-31',
     'testing_period_start_date': '2017-01-01',
@@ -11,87 +11,74 @@ config = {
             'changepoint_range': 0.9
         },
         'gru': {
-            'reduction': 'mean',
-            "lookback": 20,
-            "batch_size": 20,
+            'lr': 0.01,
+            "num_epochs": 100,
             "input_dim": 1,
             "hidden_dim": 32,
-            "num_layers": 2,
             "output_dim": 1,
-            "num_epochs": 100,
-            'lr': 0.01
+            "num_layers": 2,
+            "batch_size": 20,
+            "lookback": 20,
+            'reduction': 'mean',
         },
         'lstm': {
-            'reduction': 'mean',
-            "lookback": 20,
-            "batch_size": 20,
+            'lr': 0.01,
+            "num_epochs": 100,
             "input_dim": 1,
             "hidden_dim": 32,
-            "num_layers": 2,
             "output_dim": 1,
-            "num_epochs": 100,
-            'lr': 0.01
+            "num_layers": 2,
+            "batch_size": 20,
+            "lookback": 20,
+            'reduction': 'mean',
         },
         'transformer': {
-            'calculate_loss_over_all_values': True,
-            'input_window': 150,
-            'output_window': 10,
-            'learning_rate': 0.001,
-            'number_of_epochs': 500,
-            'batch_size': 10,
-            'feature_size': 250,
+            'lr': 0.01,
+            'num_epochs': 200,
+            'input_window': 190,
+            'hidden_dim': 128,
             'num_layers': 1,
+            'batch_size': 10,
+            'output_window': 1,
+            # hidden dimension
             'dropout': 0.1,
-            'nhead': 10,
+            'nhead': 16,
             'eval_batch_size': 1000,
+            'calculate_loss_over_all_values': True,
         },
     }
 }
 
-# transformers, lr 0.1 - SPY, feature size 500, nhead 20
+# SPY
+# transformers, lr 0.01 - SPY, feature size 128, nhead 16
 
-# 150 epoch
-# MAE:  0.9629993286132813
-# MAPE:  0.0037760472218508908
-# RMSE:  1.8780564973463296
+# MAE:  0.3626947021484375
+# MAPE:  0.0014059381541221593
+# RMSE:  0.890154642640292
+# Epoch:  100
 
+# OXY
+# transformers, lr 0.01 - SPY, feature size 128, nhead 16
 
-# transformers, lr 0.001 - SPY, feature size 500, nhead 20
+# MAE:  0.7391075134277344
+# MAPE:  0.010655233428303584
+# RMSE:  1.782664781056776
+# Epoch:  20
 
-# 30 epoch
-# MAE:  1.0448790893554687
-# MAPE:  0.004083262556330397
-# RMSE:  1.9094796014438613
+# TSLA
+# transformers, lr 0.01 - SPY, feature size 128, nhead 16
 
-
-# transformers, lr 0.01 - SPY, feature size 250, nhead 10
-
-# 10 epoch
-# MAE:  1.4769801635742188
-# MAPE:  0.005844707243743297
-# RMSE:  2.560467234267184
-
-# 20 epoch
-# MAE:  1.0551901245117188
-# MAPE:  0.0041320751185674135
-# RMSE:  2.046450169797463
+# MAE:  1.2078526916503907
+# MAPE:  0.0193124832795367
+# RMSE:  3.0113368285156796
+# Epoch:  10
 
 
-# transformers, lr 0.001 - SPY, feature size 250, nhead 10
+# AMZN
+# transformers, lr 0.01 - SPY, feature size 128, nhead 16
 
-# 80 epoch
-# MAE:  0.6938192749023437
-# MAPE:  0.0027512668177530424
-# RMSE:  1.3838778789384778
+# MAE:  9.1003515625
+# MAPE:  0.008156788804576723
+# RMSE:  21.688824980957495
+# Epoch:  100
 
-# transformers, lr 0.0005 - SPY, feature size 250, nhead 10
-
-# 40 epoch
-# MAE:  1.049423095703125
-# MAPE:  0.004157169789191488
-# RMSE:  1.962772093814715
-
-# 60 epoch
-# MAE:  1.1963215942382812
-# MAPE:  0.0047053497737298495
-# RMSE:  2.078176938420506

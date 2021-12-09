@@ -145,9 +145,6 @@ def forecast_with_lstm(training_dataset, testing_dataset, all_data):
     y_test_pred = scaler.inverse_transform(y_test_pred.detach().numpy())
     y_test = scaler.inverse_transform(y_test.detach().numpy())
 
-    print(y_test[:,0]);
-    print(y_test_pred[:,0]);
-
     # print errors
     print_metrics(y_test[:,0], y_test_pred[:,0])
 

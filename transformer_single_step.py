@@ -34,8 +34,8 @@ calculate_loss_over_all_values = transformer_config['calculate_loss_over_all_val
 
 input_window = transformer_config['input_window']
 output_window = transformer_config['output_window']
-lr_definition = transformer_config['learning_rate']
-number_of_epochs = transformer_config['number_of_epochs']
+lr_definition = transformer_config['lr']
+number_of_epochs = transformer_config['num_epochs']
 batch_size = transformer_config['batch_size'] # batch size
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -68,7 +68,7 @@ class PositionalEncoding(nn.Module):
        
 
 class TransAm(nn.Module):
-    def __init__(self,feature_size=transformer_config['feature_size'], num_layers=transformer_config['num_layers'], dropout=transformer_config['dropout']):
+    def __init__(self,feature_size=transformer_config['hidden_dim'], num_layers=transformer_config['num_layers'], dropout=transformer_config['dropout']):
         super(TransAm, self).__init__()
         self.model_type = 'Transformer'
         
@@ -165,7 +165,7 @@ def train(train_data, epoch):
             loss = criterion(output[-output_window:], targets[-output_window:])
     
         loss.backward()
-        torch.nn.utils.clip_grad_norm_(model.parameters(), 0.5)
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 0.7)
         optimizer.step()
 
         total_loss += loss.item()
@@ -227,8 +227,8 @@ def plot_and_loss(eval_model, data_source, epoch, series):
     # pyplot.plot(test_result-truth,color="green")
     # pyplot.grid(True, which='both')
     pyplot.axhline(y=0, color='k')
-    pyplot.show()
-    # pyplot.savefig('graphs/transformer/transformer-multi-epoch%d.png'%epoch)
+    # pyplot.show()
+    pyplot.savefig('graphs/transformer/transformer-single-epoch%d.png'%epoch)
     pyplot.close()
     
     return total_loss / i
@@ -249,11 +249,8 @@ def predict_future(eval_model, data_source, original_series, epoch):
     # _, full_data = get_batch(data_source, 0, 1)
     _ , data = get_batch(data_source, 0,1)
     with torch.no_grad():
-        for i in range(0, steps,1):
-            input = torch.clone(data[-input_window:])
-            input[-output_window:] = 0     
+        for i in range(0, steps):            
             output = eval_model(data[-input_window:])                        
-            
             data = torch.cat((data, output[-1:]))
     
     data = data.cpu().view(-1)
@@ -277,15 +274,15 @@ def predict_future(eval_model, data_source, original_series, epoch):
     pyplot.xlabel('Predikce vs realná data na části testovacího souboru')
     pyplot.ylabel(f"{config['ticker']} cena akcie")
 
-    pyplot.show()
-    # pyplot.savefig(f"graphs/transformer/transformer_predicted_{config['ticker']}_{str(steps)}_{str(epoch)}.png")
+    # pyplot.show()
+    pyplot.savefig(f"graphs/transformer/transformer_predicted_{config['ticker']}_{str(steps)}_{str(epoch)}.png")
 
     pyplot.close()
   
 def evaluate(eval_model, data_source):
     eval_model.eval() # Turn on the evaluation mode
     total_loss = 0.
-    eval_batch_size = transformer_config['eval_batch_size']
+    eval_batch_size = 1000
     with torch.no_grad():
         for i in range(0, len(data_source) - 1, eval_batch_size):
             data, targets = get_batch(data_source, i,eval_batch_size)
@@ -293,11 +290,10 @@ def evaluate(eval_model, data_source):
             if calculate_loss_over_all_values:
                 total_loss += len(data[0])* criterion(output, targets).cpu().item()
             else:                                
-                total_loss += len(data[0])* criterion(output[-output_window:], targets[-output_window:]).cpu().item()            
+                total_loss += len(data[0])* criterion(output[-output_window:], targets[-output_window:]).cpu().item() 
     return total_loss / len(data_source)
 
-
-def predict_with_transformer_multi(series_train, series_test):
+def predict_with_transformer_single(series_train, series_test):
 
     train_data, val_data = prepare_data(series_train, series_test)
 
