@@ -34,8 +34,8 @@ calculate_loss_over_all_values = transformer_config['calculate_loss_over_all_val
 
 input_window = transformer_config['input_window']
 output_window = transformer_config['output_window']
-lr_definition = transformer_config['learning_rate']
-number_of_epochs = transformer_config['number_of_epochs']
+lr_definition = transformer_config['lr']
+number_of_epochs = transformer_config['num_epochs']
 batch_size = transformer_config['batch_size'] # batch size
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -68,7 +68,7 @@ class PositionalEncoding(nn.Module):
        
 
 class TransAm(nn.Module):
-    def __init__(self,feature_size=transformer_config['feature_size'], num_layers=transformer_config['num_layers'], dropout=transformer_config['dropout']):
+    def __init__(self,feature_size=transformer_config['hidden_dim'], num_layers=transformer_config['num_layers'], dropout=transformer_config['dropout']):
         super(TransAm, self).__init__()
         self.model_type = 'Transformer'
         
@@ -107,7 +107,7 @@ scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.98)
 # if window is 100 and prediction step is 1
 # in -> [0..99]
 # target -> [1..100]
-def create_input_sequences(input_data, tw):
+def create_inout_sequences(input_data, tw):
     inout_seq = []
     L = len(input_data)
     for i in range(L-tw):
@@ -132,11 +132,11 @@ def prepare_data(series_train, series_test):
     # convert our train data into a pytorch train tensor
     #train_tensor = torch.FloatTensor(train_data).view(-1)
     # todo: add comment.. 
-    train_sequence = create_input_sequences(price_train,input_window)
+    train_sequence = create_inout_sequences(price_train,input_window)
     train_sequence = train_sequence[:-output_window] #todo: fix hack?
 
     #test_data = torch.FloatTensor(test_data).view(-1) 
-    test_data = create_input_sequences(price_test,input_window)
+    test_data = create_inout_sequences(price_test,input_window)
     test_data = test_data[:-output_window] #todo: fix hack?
 
     return train_sequence.to(device),test_data.to(device)
@@ -277,8 +277,8 @@ def predict_future(eval_model, data_source, original_series, epoch):
     pyplot.xlabel('Predikce vs realná data na části testovacího souboru')
     pyplot.ylabel(f"{config['ticker']} cena akcie")
 
-    pyplot.show()
-    # pyplot.savefig(f"graphs/transformer/transformer_predicted_{config['ticker']}_{str(steps)}_{str(epoch)}.png")
+    # pyplot.show()
+    pyplot.savefig(f"graphs/transformer/transformer_predicted_{config['ticker']}_{str(steps)}_{str(epoch)}.png")
 
     pyplot.close()
   

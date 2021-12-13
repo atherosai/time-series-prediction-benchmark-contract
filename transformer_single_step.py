@@ -16,11 +16,6 @@ transformer_config = config['methods_hyper_config']['transformer']
 torch.manual_seed(0)
 np.random.seed(0)
 
-# This concept is also called teacher forceing. 
-# The flag decides if the loss will be calculted over all 
-# or just the predicted values.
-calculate_loss_over_all_values = transformer_config['calculate_loss_over_all_values']
-
 # S is the source sequence length
 # T is the target sequence length
 # N is the batch size
@@ -107,13 +102,12 @@ scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.98)
 # if window is 100 and prediction step is 1
 # in -> [0..99]
 # target -> [1..100]
-def create_input_sequences(input_data, tw):
+def create_inout_sequences(input_data, tw):
     inout_seq = []
     L = len(input_data)
     for i in range(L-tw):
-        train_seq = np.append(input_data[i:i+tw][:-output_window] , output_window * [0])
-        train_label = input_data[i:i+tw]
-        #train_label = input_data[i+output_window:i+tw+output_window]
+        train_seq = input_data[i:i+tw]
+        train_label = input_data[i+output_window:i+tw+output_window]
         inout_seq.append((train_seq ,train_label))
     return torch.FloatTensor(inout_seq)
 
@@ -132,11 +126,11 @@ def prepare_data(series_train, series_test):
     # convert our train data into a pytorch train tensor
     #train_tensor = torch.FloatTensor(train_data).view(-1)
     # todo: add comment.. 
-    train_sequence = create_input_sequences(price_train,input_window)
+    train_sequence = create_inout_sequences(price_train,input_window)
     train_sequence = train_sequence[:-output_window] #todo: fix hack?
 
     #test_data = torch.FloatTensor(test_data).view(-1) 
-    test_data = create_input_sequences(price_test,input_window)
+    test_data = create_inout_sequences(price_test,input_window)
     test_data = test_data[:-output_window] #todo: fix hack?
 
     return train_sequence.to(device),test_data.to(device)
@@ -157,12 +151,8 @@ def train(train_data, epoch):
     for batch, i in enumerate(range(0, len(train_data) - 1, batch_size)):
         data, targets = get_batch(train_data, i,batch_size)
         optimizer.zero_grad()
-        output = model(data)        
-
-        if calculate_loss_over_all_values:
-            loss = criterion(output, targets)
-        else:
-            loss = criterion(output[-output_window:], targets[-output_window:])
+        output = model(data)
+        loss = criterion(output, targets)
     
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), 0.7)
@@ -183,9 +173,9 @@ def train(train_data, epoch):
             start_time = time.time()
 
 def plot_and_loss(eval_model, data_source, epoch, series):
-    eval_model.eval() 
+    eval_model.eval()
     total_loss = 0.
-    test_result = torch.Tensor(0)    
+    test_result = torch.Tensor(0)
     truth = torch.Tensor(0)
 
     # print('date source', data_source)
@@ -193,13 +183,8 @@ def plot_and_loss(eval_model, data_source, epoch, series):
         for i in range(0, len(data_source) - 1):
             data, target = get_batch(data_source, i,1)
             # look like the model returns static values for the output window
-            output = eval_model(data)    
-
-            if calculate_loss_over_all_values:                                
-                total_loss += criterion(output, target).item()
-            else:
-                total_loss += criterion(output[-output_window:], target[-output_window:]).item()
-            
+            output = eval_model(data)                
+            total_loss += criterion(output, target).item()
             test_result = torch.cat((test_result, output[-1].view(-1).cpu()), 0) #todo: check this. -> looks good to me
             truth = torch.cat((truth, target[-1].view(-1).cpu()), 0)
 
@@ -233,10 +218,6 @@ def plot_and_loss(eval_model, data_source, epoch, series):
     
     return total_loss / i
 
-def mean_absolute_percentage_error_custom(y_true, y_pred): 
-    y_true, y_pred = np.array(y_true), np.array(y_pred)
-    return np.mean(np.abs((y_true - y_pred) / y_true)) * 100
-
 def predict_future(eval_model, data_source, original_series, epoch):
     eval_model.eval() 
     total_loss = 0.
@@ -247,7 +228,7 @@ def predict_future(eval_model, data_source, original_series, epoch):
     steps = test_series.shape[0] - input_window
 
     # _, full_data = get_batch(data_source, 0, 1)
-    _ , data = get_batch(data_source, 0,1)
+    data, _ = get_batch(data_source, 0,1)
     with torch.no_grad():
         for i in range(0, steps):            
             output = eval_model(data[-input_window:])                        
@@ -282,15 +263,12 @@ def predict_future(eval_model, data_source, original_series, epoch):
 def evaluate(eval_model, data_source):
     eval_model.eval() # Turn on the evaluation mode
     total_loss = 0.
-    eval_batch_size = 1000
+    eval_batch_size = transformer_config['eval_batch_size']
     with torch.no_grad():
         for i in range(0, len(data_source) - 1, eval_batch_size):
             data, targets = get_batch(data_source, i,eval_batch_size)
             output = eval_model(data)            
-            if calculate_loss_over_all_values:
-                total_loss += len(data[0])* criterion(output, targets).cpu().item()
-            else:                                
-                total_loss += len(data[0])* criterion(output[-output_window:], targets[-output_window:]).cpu().item() 
+            total_loss += len(data[0])* criterion(output, targets).cpu().item()
     return total_loss / len(data_source)
 
 def predict_with_transformer_single(series_train, series_test):

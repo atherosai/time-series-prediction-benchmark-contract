@@ -1,7 +1,7 @@
 # SPY OXY TSLA AMZN
 config = {
-    'ticker': 'TSLA',
-    'training_period_start_date': '2010-01-01',
+    'ticker': 'SPY',
+    'training_period_start_date': '2012-01-01',
     'training_period_end_date': '2016-12-31',
     'testing_period_start_date': '2017-01-01',
     'testing_period_end_date': '2017-12-31',
@@ -33,7 +33,7 @@ config = {
             'reduction': 'mean',
         },
         'transformer': {
-            'lr': 0.01,
+            'lr': 0.05,
             'num_epochs': 200,
             'input_window': 190,
             'hidden_dim': 128,
@@ -42,7 +42,7 @@ config = {
             'output_window': 1,
             # hidden dimension
             'dropout': 0.1,
-            'nhead': 16,
+            'nhead': 8,
             'eval_batch_size': 1000,
             'calculate_loss_over_all_values': True,
         },
@@ -50,35 +50,50 @@ config = {
 }
 
 # SPY
-# transformers, lr 0.01 - SPY, feature size 128, nhead 16
+# transformers, lr 0.01 - SPY, hidden size 128, nhead 8
 
-# MAE:  0.3626947021484375
-# MAPE:  0.0014059381541221593
-# RMSE:  0.890154642640292
-# Epoch:  100
+# MAE:  1.028805419921875
+# MAPE:  0.004151119179610707
+# RMSE:  1.3494785401665705
+# Epoch:  60
+
+# transformers, lr 0.05 - SPY, hidden size 128, nhead 8
+
+# MAE:  0.93498779296875
+# MAPE:  0.0037750419300992036
+# RMSE:  1.3396207970761123
+# Epoch:  170
+
+
+
 
 # OXY
 # transformers, lr 0.01 - SPY, feature size 128, nhead 16
 
-# MAE:  0.7391075134277344
-# MAPE:  0.010655233428303584
-# RMSE:  1.782664781056776
-# Epoch:  20
+# MAE:  0.8890245208740234
+# MAPE:  0.012743659299718204
+# RMSE:  2.283644642099354
+# Epoch:  10
+
+
+
 
 # TSLA
 # transformers, lr 0.01 - SPY, feature size 128, nhead 16
 
-# MAE:  1.2078526916503907
-# MAPE:  0.0193124832795367
-# RMSE:  3.0113368285156796
-# Epoch:  10
+# MAE:  8.283213073730469
+# MAPE:  0.026254763891988938
+# RMSE:  19.118175630426077
+# Epoch:  20
+
+
 
 
 # AMZN
 # transformers, lr 0.01 - SPY, feature size 128, nhead 16
 
-# MAE:  9.1003515625
-# MAPE:  0.008156788804576723
-# RMSE:  21.688824980957495
-# Epoch:  100
+# MAE:  5.963873046875
+# MAPE:  0.005755070370978157
+# RMSE:  17.177625540641323
+# Epoch:  10
 
