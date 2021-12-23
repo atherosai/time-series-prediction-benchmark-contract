@@ -164,11 +164,17 @@ def forecast_with_lstm(training_dataset, testing_dataset, all_data):
 
     original = scaler.inverse_transform(price['open'].values.reshape(-1,1))
 
+    print('trainPredictPlot: ', trainPredictPlot)
+    print('testPredictPlot: ', testPredictPlot)
+    print('original: ', original)
+
     predictions = np.append(trainPredictPlot, testPredictPlot, axis=1)
     predictions = np.append(predictions, original, axis=1)
     result = pd.DataFrame(predictions)
 
     plt.title(f" {config['ticker']} LSTM predikce")
+
+    print(result)
 
     plot_args = (
         result.index, result[0], 'blue',

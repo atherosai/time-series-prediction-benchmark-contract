@@ -41,12 +41,17 @@ def load_prediction_dataset(
 
 def print_metrics(y_true, y_pred):
 
+    print('y_true.size: ', y_true.size)
+    print('y_pred.size: ', y_pred.size)
 
-    y_true_trimmed = y_true[:250]
-    y_pred_trimmed = y_pred[:250]
+    y_true_trimmed = y_true[-250:]
+    y_pred_trimmed = y_pred[-250:]
 
     print(y_true_trimmed.size)
     print(y_pred_trimmed.size)
+
+    # print(y_true_trimmed)
+    # print(y_pred_trimmed)
     
     print('MAE: ', mean_absolute_error(y_true_trimmed, y_pred_trimmed))
     print('MAPE: ', mean_absolute_percentage_error(y_true_trimmed, y_pred_trimmed))

@@ -10,6 +10,7 @@ from sklearn.preprocessing import MinMaxScaler
 from base_config import config
 from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error, mean_absolute_error
 from utils import print_metrics
+from matplotlib import pyplot
 
 transformer_config = config['methods_hyper_config']['transformer']
 
@@ -126,7 +127,7 @@ def prepare_data(series_train, series_test):
     # convert our train data into a pytorch train tensor
     #train_tensor = torch.FloatTensor(train_data).view(-1)
     # todo: add comment.. 
-    train_sequence = create_inout_sequences(price_train,input_window)
+    train_sequence = create_inout_sequences(price_train, input_window)
     train_sequence = train_sequence[:-output_window] #todo: fix hack?
 
     #test_data = torch.FloatTensor(test_data).view(-1) 
@@ -213,7 +214,7 @@ def plot_and_loss(eval_model, data_source, epoch, series):
     # pyplot.grid(True, which='both')
     pyplot.axhline(y=0, color='k')
     # pyplot.show()
-    pyplot.savefig('graphs/transformer/transformer-single-epoch%d.png'%epoch)
+    # pyplot.savefig('graphs/transformer/transformer-single-epoch%d.png'%epoch)
     pyplot.close()
     
     return total_loss / i
@@ -225,41 +226,80 @@ def predict_future(eval_model, data_source, original_series, epoch):
     truth = torch.Tensor(0)
 
     test_series = original_series['series_test']
-    steps = test_series.shape[0] - input_window
+    training_series = original_series['series_train']
+    steps = 252
 
     # _, full_data = get_batch(data_source, 0, 1)
-    data, _ = get_batch(data_source, 0,1)
+    data, _ = get_batch(data_source, 0, 1)
     with torch.no_grad():
         for i in range(0, steps):            
             output = eval_model(data[-input_window:])                        
             data = torch.cat((data, output[-1:]))
     
     data = data.cpu().view(-1)
+
     data_plot = scaler.inverse_transform(data.numpy().reshape(1, -1)).reshape(-1)
-    # full_data = full_data.cpu().view
-    # full_data = scaler.inverse_transform(full_data.numpy().reshape(1, -1)).reshape(-1)
-    
+    testing_plot = test_series['open'].to_numpy()
+    training_plot = training_series['open'].to_numpy()
     original_values = test_series['open'].to_numpy()
 
-    print_metrics(original_values, data_plot)
-    print('Steps: ', steps)
-    print('Epoch: ', epoch)
+    print_metrics(original_values, data_plot);
 
-    # if epoch > transformer_config['number_of_epochs'] * 0.7:
-    pyplot.plot(data_plot,color="red")
-    pyplot.plot(test_series['open'], color="blue")
-
-    # pyplot.grid(True, which='both')
-    pyplot.legend(['Predikce ceny', 'Realná cena'])
-    # pyplot.axhline(y=0, color='k')
+    pyplot.plot(data_plot, color="violet")
+    pyplot.plot(testing_plot, color="red")
+    # pyplot.plot(training_plot, color="blue")
     pyplot.xlabel('Predikce vs realná data na části testovacího souboru')
     pyplot.ylabel(f"{config['ticker']} cena akcie")
+    pyplot.legend(
+        [
+            'Predikce',
+            'Testovací datový soubor',
+            # 'Horní hranice predikce',
+            # 'Dolní hranice predikce'
+        ]
+    )
 
     # pyplot.show()
     pyplot.savefig(f"graphs/transformer/transformer_predicted_{config['ticker']}_{str(steps)}_{str(epoch)}.png")
+    pyplot.close()
+
+    # print('Steps: ', steps)
+    # print('Epoch: ', epoch)
+
+    # pyplot.title(f" {config['ticker']} Transformer predikce")
+
+    # training_plot = training_series['open'].to_numpy()
+    # testing_plot = test_series['open'].to_numpy()
+    # predictions_plot = scaler.inverse_transform(data.numpy().reshape(1, -1)).reshape(-1)
+
+    # print('training_plot: ', training_plot)
+    # print('training_plot size: ', training_plot.size)
+    # print('testing_plot: ', testing_plot)
+    # print('testing_plot size: ', testing_plot.size)
+    # print('predictions_plot: ', predictions_plot)
+    # print('predictions_plot size: ', predictions_plot.size)
+
+    # pyplot.plot(predictions_plot, color="red")
+    # pyplot.plot(testing_plot, color="blue")
+    # pyplot.xlabel('Predikce vs realná data na části testovacího souboru')
+    # pyplot.ylabel(f"{config['ticker']} cena akcie")
+    # pyplot.legend(
+    #     [
+    #         'Predikce',
+    #         'Testovací datový soubor',
+    #         # 'Horní hranice predikce',
+    #         # 'Dolní hranice predikce'
+    #     ]
+    # )
+
+    # plt.xlabel(f" Datum")
+    # plt.ylabel(f" {config['ticker']} cena při otevření burzy $")
+
+    pyplot.show()
+    # pyplot.savefig(f"graphs/transformer/transformer_predicted_{config['ticker']}_{str(steps)}_{str(epoch)}.png")
 
     pyplot.close()
-  
+ 
 def evaluate(eval_model, data_source):
     eval_model.eval() # Turn on the evaluation mode
     total_loss = 0.
@@ -283,10 +323,10 @@ def predict_with_transformer_single(series_train, series_test):
         train(train_data, epoch)
         
         if(epoch % 10 is 0):
-            # val_loss = plot_and_loss(model, val_data, epoch, {
-            #     "series_train": series_train,
-            #     "series_test": series_test
-            # })
+            val_loss = plot_and_loss(model, val_data, epoch, {
+                "series_train": series_train,
+                "series_test": series_test 
+            })
             predict_future(model, val_data, {
                 "series_train": series_train,
                 "series_test": series_test

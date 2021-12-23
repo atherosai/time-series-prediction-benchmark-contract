@@ -43,14 +43,14 @@ if __name__ == "__main__":
     #     all_data=all_data
     # )
 
-    forecast_with_lstm(training_dataset=training_data, testing_dataset=testing_data, all_data=all_data)
+    # forecast_with_lstm(training_dataset=training_data, testing_dataset=testing_data, all_data=all_data)
 
     # predict_with_transformer_multi(
     #     training_data,
     #     testing_data
     # )
 
-    # predict_with_transformer_single(
-    #     training_data,
-    #     testing_data
-    # )
+    predict_with_transformer_single(
+        training_data,
+        testing_data
+    )

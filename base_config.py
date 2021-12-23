@@ -33,14 +33,13 @@ config = {
             'reduction': 'mean',
         },
         'transformer': {
-            'lr': 0.05,
-            'num_epochs': 200,
-            'input_window': 190,
+            'lr': 0.005,
+            'num_epochs': 100,
+            'input_window': 100,
+            'output_window': 1,
             'hidden_dim': 128,
             'num_layers': 1,
             'batch_size': 10,
-            'output_window': 1,
-            # hidden dimension
             'dropout': 0.1,
             'nhead': 8,
             'eval_batch_size': 1000,
@@ -48,6 +47,9 @@ config = {
         },
     }
 }
+
+# y_true.size:  298
+# y_pred.size:  298
 
 # SPY
 # transformers, lr 0.01 - SPY, hidden size 128, nhead 8
