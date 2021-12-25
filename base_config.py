@@ -33,17 +33,18 @@ config = {
             'reduction': 'mean',
         },
         'transformer': {
-            'lr': 0.005,
+            'lr': 0.1,
             'num_epochs': 100,
-            'input_window': 100,
+            'input_window': 1,
             'output_window': 1,
-            'hidden_dim': 128,
+            'hidden_dim': 32,
             'num_layers': 1,
-            'batch_size': 10,
+            'batch_size': 1,
             'dropout': 0.1,
             'nhead': 8,
             'eval_batch_size': 1000,
             'calculate_loss_over_all_values': True,
+            "loopback": 20,
         },
     }
 }
