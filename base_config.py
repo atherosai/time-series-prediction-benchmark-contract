@@ -44,7 +44,6 @@ config = {
             'nhead': 8,
             'eval_batch_size': 1000,
             'calculate_loss_over_all_values': True,
-            "loopback": 20,
         },
     }
 }

@@ -43,7 +43,7 @@ criterion = torch.nn.MSELoss(reduction=lstm_config['reduction'])
 optimiser = torch.optim.Adam(model.parameters(), lr=lstm_config['lr'])
 
 
-def split_data(price, lookback):
+def split_data(price, lookback, test_set_size):
     data_raw = price.to_numpy() # convert to numpy array
     data = []
     
@@ -52,7 +52,6 @@ def split_data(price, lookback):
         data.append(data_raw[index: index + lookback])
     
     data = np.array(data)
-    test_set_size = int(np.round(0.2*data.shape[0]))
     train_set_size = data.shape[0] - (test_set_size)
     
     x_train = data[:train_set_size,:-1,:]
@@ -65,13 +64,13 @@ def split_data(price, lookback):
 
 scaler = MinMaxScaler(feature_range=(-1, 1))
 
-def process_to_tensor_procedure(data_set):
+def process_to_tensor_procedure(data_set, test_set_size):
 
     price = data_set[['open']]
 
     price['open'] = scaler.fit_transform(price['open'].values.reshape(-1,1))
 
-    x_train, y_train, x_test, y_test = split_data(price, lookback)
+    x_train, y_train, x_test, y_test = split_data(price, lookback, test_set_size)
 
     return [
        torch.from_numpy(x_train).type(torch.Tensor),
@@ -87,7 +86,7 @@ def forecast_with_lstm(training_dataset, testing_dataset, all_data):
     hist = np.zeros(num_epochs)
     start_time = time.time()
 
-    [x_train, y_train, x_test, y_test, price] = process_to_tensor_procedure(all_data)
+    [x_train, y_train, x_test, y_test, price] = process_to_tensor_procedure(all_data, len(testing_dataset['open']))
     
     for t in range(num_epochs):
         
@@ -152,6 +151,8 @@ def forecast_with_lstm(training_dataset, testing_dataset, all_data):
     # lstm.append(testScore)
     lstm.append(training_time)
 
+    print(y_train_pred)
+
     # shift train predictions for plotting
     trainPredictPlot = np.empty_like(price)
     trainPredictPlot[:, :] = np.nan
@@ -174,12 +175,10 @@ def forecast_with_lstm(training_dataset, testing_dataset, all_data):
 
     plt.title(f" {config['ticker']} LSTM predikce")
 
-    print(result)
-
     plot_args = (
-        result.index, result[0], 'blue',
-        result.index,  result[1], 'red',
-        result.index, result[2], 'violet'
+        all_data['date'], result[0], 'blue',
+        all_data['date'],  result[1], 'red',
+        all_data['date'], result[2], 'violet'
     )
 
     plt.plot(

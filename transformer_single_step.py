@@ -31,7 +31,6 @@ np.random.seed(0)
 input_window = transformer_config['input_window']
 output_window = transformer_config['output_window']
 lr_definition = transformer_config['lr']
-loopback = transformer_config['loopback']
 number_of_epochs = transformer_config['num_epochs']
 batch_size = transformer_config['batch_size'] # batch size
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -110,8 +109,6 @@ def create_inout_sequences(input_data, tw):
     for i in range(L-tw):
         train_seq = input_data[i:i+tw]
         train_label = input_data[i+output_window:i+tw+output_window]
-        print('train_seq: ', train_seq);
-        print('train_label: ', train_label);
         inout_seq.append((train_seq ,train_label))
     return torch.FloatTensor(inout_seq)
 
@@ -192,15 +189,6 @@ def plot_and_loss(eval_model, data_source, epoch, series):
             test_result = torch.cat((test_result, output[-1].view(-1).cpu()), 0) #todo: check this. -> looks good to me
             truth = torch.cat((truth, target[-1].view(-1).cpu()), 0)
 
-
-    #test_result = test_result.cpu().numpy()
-    print('train', series['series_train'])
-
-    print('test', series['series_test'])
-    # train_dates = dates['train_dates']
-    # test_dates = dates['test_dates'][:145]
-
-
     truth_result = scaler.inverse_transform(truth[:len(test_result)].numpy().reshape(1, -1)).reshape(-1)
     test_result = scaler.inverse_transform(test_result.numpy().reshape(1, -1)).reshape(-1)
     dates_train = series['series_train'].iloc[::5, :]
@@ -230,7 +218,7 @@ def predict_future(eval_model, data_source, original_series, epoch):
 
     test_series = original_series['series_test']
     training_series = original_series['series_train']
-    steps = 151
+    steps = 250
 
     # _, full_data = get_batch(data_source, 0, 1)
     data, _ = get_batch(data_source, 0, 1)
@@ -240,10 +228,11 @@ def predict_future(eval_model, data_source, original_series, epoch):
             data = torch.cat((data, output[-1:]))
     
     data = data.cpu().view(-1)
+    predicted_values = scaler.inverse_transform(data.numpy().reshape(1, -1)).reshape(-1)
 
-    # all_data = training_series.append(test_series)
-    # testing_data = test_series['open'].to_numpy()
-    # training_data = training_series['open'].to_numpy()
+    all_data = training_series.append(test_series)
+    training_data = training_series['open'].to_numpy()
+    testing_data = test_series['open'].to_numpy()
 
     # predictions_plot = np.empty_like(all_data)
     # predictions_plot[:] = np.nan
@@ -252,46 +241,47 @@ def predict_future(eval_model, data_source, original_series, epoch):
     # training_plot = np.empty_like(all_data)
     # training_plot[:] = np.nan
 
+    print(len(all_data))
+    print(len(training_data))
+    print(len(testing_data))
+
+    print(training_data)
 
     # shift train predictions for plotting
-    # trainPredictPlot = np.empty_like(all_data)
-    # trainPredictPlot[:, :] = np.nan
-    # trainPredictPlot[loopback:len(training_data)+loopback, :] = training_data
+    trainPredictPlot = np.empty_like(all_data['open'])
+    trainPredictPlot[:] = np.nan
+    trainPredictPlot[:len(training_data)] = training_data
 
     # # shift test predictions for plotting
-    # testPredictPlot = np.empty_like(all_data)
-    # testPredictPlot[:, :] = np.nan
-    # testPredictPlot[len(training_data)+loopback-1:len(all_data)-1, :] = scaler.inverse_transform(data.numpy().reshape(1, -1)).reshape(-1)
+    testPredictPlot = np.empty_like(all_data['open'])
+    testPredictPlot[:] = np.nan
+    testPredictPlot[len(training_data)-1:len(all_data)-1] = testing_data
 
     # # shift predictions for plotting
-    # predictionsPlot = np.empty_like(all_data)
-    # predictionsPlot[:, :] = np.nan
-    # predictionsPlot[len(training_data)+loopback-1:len(all_data)-1, :] = scaler.inverse_transform(data.numpy().reshape(1, -1)).reshape(-1)
+    predictionsPlot = np.empty_like(all_data['open'])
+    predictionsPlot[:] = np.nan
+    predictionsPlot[len(training_data):len(all_data)] = predicted_values
 
+    print_metrics(testing_data, predicted_values);
+    
 
-    testing_plot = test_series['open'].to_numpy()
-    training_plot = training_series['open'].to_numpy()
-    predictions_plot = scaler.inverse_transform(data.numpy().reshape(1, -1)).reshape(-1)
+    plot_args = (
+        all_data['date'], trainPredictPlot, 'blue',
+        all_data['date'],  testPredictPlot, 'red',
+        all_data['date'], predictionsPlot, 'violet'
+    )
 
-    print_metrics(test_series['open'].to_numpy(), scaler.inverse_transform(data.numpy().reshape(1, -1)).reshape(-1));
+    pyplot.plot(
+        *plot_args
+    )
 
-    print('training_plot: ', training_plot)
-    print('training_plot size: ', training_plot.size)
-    print('testing_plot: ', testing_plot)
-    print('testing_plot size: ', testing_plot.size)
-    print('predictions_plot: ', predictions_plot)
-    print('predictions_plot size: ', predictions_plot.size)
-
-    # pyplot.plot(all_data, color="blue")
-    pyplot.plot(testing_plot, color="red")
-    pyplot.plot(predictions_plot, color="violet")
     pyplot.xlabel('Predikce vs realná data na části testovacího souboru')
     pyplot.ylabel(f"{config['ticker']} cena akcie")
     pyplot.legend(
         [
-            'Predikce',
-            'Testovací datový soubor',
             'Trénovací datový soubor',
+            'Testovací datový soubor',
+            'Predikce',
         ]
     )
 
@@ -313,9 +303,6 @@ def evaluate(eval_model, data_source):
 def predict_with_transformer_single(series_train, series_test):
 
     train_data, val_data = prepare_data(series_train, series_test)
-
-    print('train_data: ', train_data)
-    print('series_test: ', series_test)
 
     for epoch in range(1, epochs + 1):
         epoch_start_time = time.time()
